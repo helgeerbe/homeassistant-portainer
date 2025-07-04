@@ -35,13 +35,23 @@ async def async_setup_entry(
 
         # Always create force update check button
         _LOGGER.error("Creating ForceUpdateCheckButton")
-        button = ForceUpdateCheckButton(coordinator)
-        entities.append(button)
+        try:
+            button = ForceUpdateCheckButton(coordinator)
+            _LOGGER.error("Button created successfully: %s", button)
+            _LOGGER.error("Button unique_id: %s", button.unique_id)
+            _LOGGER.error("Button name: %s", button.name)
+            entities.append(button)
+            _LOGGER.error("Button added to entities list")
+        except Exception as button_error:
+            _LOGGER.error("Failed to create button: %s", button_error, exc_info=True)
 
         _LOGGER.error("Adding %d button entities", len(entities))
         if entities:
-            async_add_entities(entities)
-            _LOGGER.error("Button entities added successfully")
+            try:
+                async_add_entities(entities)
+                _LOGGER.error("Button entities added successfully")
+            except Exception as add_error:
+                _LOGGER.error("Failed to add entities: %s", add_error, exc_info=True)
         else:
             _LOGGER.error("No button entities to add")
     except Exception as e:
@@ -63,9 +73,26 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
                 f"{coordinator.config_entry.entry_id}_force_update_check_v2"
             )
             _LOGGER.error("Button initialized with unique_id: %s", self._attr_unique_id)
+            _LOGGER.error("Button name: %s", self._attr_name)
+            _LOGGER.error("Button icon: %s", self._attr_icon)
         except Exception as e:
             _LOGGER.error("Error initializing button: %s", e, exc_info=True)
             raise
+
+    @property
+    def name(self) -> str:
+        """Return the name of the button."""
+        return self._attr_name
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for the button."""
+        return self._attr_unique_id
+
+    @property
+    def icon(self) -> str:
+        """Return the icon for the button."""
+        return self._attr_icon
 
     @property
     def device_info(self):
