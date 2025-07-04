@@ -406,6 +406,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
             )
             return
 
+        _LOGGER.warning("FORCE UPDATE CHECK STARTED - Button was pressed!")
         _LOGGER.info(
             "Force update check initiated - clearing cache and performing fresh container update checks"
         )

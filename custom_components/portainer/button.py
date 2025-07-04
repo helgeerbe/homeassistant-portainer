@@ -21,10 +21,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
+    _LOGGER.warning(
+        "Setting up Portainer button platform - button entity will be created"
+    )
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
     button = ForceUpdateCheckButton(coordinator, config_entry.entry_id)
     async_add_entities([button])
+    _LOGGER.warning("Portainer button entity created and added: %s", button.unique_id)
 
 
 class ForceUpdateCheckButton(ButtonEntity):
@@ -40,6 +44,11 @@ class ForceUpdateCheckButton(ButtonEntity):
         self._attr_icon = "mdi:update"
         self._attr_unique_id = f"{entry_id}_force_update_check_final"
 
+        _LOGGER.warning(
+            "Force Update Check button initialized with unique_id: %s",
+            self._attr_unique_id,
+        )
+
     @property
     def device_info(self):
         """Return device info to group with System device."""
@@ -53,6 +62,8 @@ class ForceUpdateCheckButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
+        # Test logging to verify it works
+        _LOGGER.warning("BUTTON PRESSED - Force Update Check button pressed!")
         _LOGGER.info(
             "Force Update Check button pressed - initiating immediate update check for all containers"
         )
