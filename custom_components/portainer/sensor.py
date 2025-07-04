@@ -55,7 +55,7 @@ async def async_setup_entry(
     @callback
     async def async_update_controller(coordinator):
         """Update entities when data changes."""
-        platform = ep.async_get_current_platform()
+        # Use the platform reference we already have
         existing_entities = platform.entities
         new_entities = []
         entities = await async_create_sensors(coordinator, descriptions, dispatcher)
