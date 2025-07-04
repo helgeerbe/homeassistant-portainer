@@ -127,16 +127,24 @@ class TimestampSensor(PortainerSensor):
         self._attr_device_class = "timestamp"
 
     @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> datetime | str | None:
         """Return the timestamp value."""
         value = self._data[self.description.data_attribute]
         if value and isinstance(value, str):
             if value in ["disabled", "never"]:
-                return None  # Will show as "unavailable"
+                return value  # Return the status as string
             try:
                 return datetime.fromisoformat(value.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
                 return None
+        return None
+
+    @property
+    def device_class(self) -> str | None:
+        """Return device class - only timestamp if we have a valid datetime."""
+        value = self._data[self.description.data_attribute]
+        if value and isinstance(value, str) and value not in ["disabled", "never"]:
+            return "timestamp"
         return None
 
     @property
