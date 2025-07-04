@@ -22,9 +22,9 @@ async def async_setup_entry(
 
     entities = []
 
-    # Add force update check button if feature is enabled
-    if coordinator.features.get(CONF_FEATURE_UPDATE_CHECK, False):
-        entities.append(ForceUpdateCheckButton(coordinator))
+    # DEBUG: Always create button for testing
+    entities.append(ForceUpdateCheckButton(coordinator))
+    # Original: if coordinator.features.get(CONF_FEATURE_UPDATE_CHECK, False):
 
     if entities:
         async_add_entities(entities)

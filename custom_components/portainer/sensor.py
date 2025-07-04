@@ -131,7 +131,7 @@ class TimestampSensor(PortainerSensor):
         """Return the timestamp value."""
         # Handle case where data might not be available yet
         if not hasattr(self, "_data") or not self._data:
-            return "unavailable"
+            return "never"  # Return a valid status instead of "unavailable"
 
         value = self._data.get(self.description.data_attribute)
         if value and isinstance(value, str):
@@ -140,8 +140,8 @@ class TimestampSensor(PortainerSensor):
             try:
                 return datetime.fromisoformat(value.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
-                return None
-        return None
+                return "never"  # Return valid status on error
+        return "never"  # Default to valid status
 
     @property
     def device_class(self) -> str | None:

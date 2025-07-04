@@ -150,7 +150,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
         """Get system-level data."""
         next_update = self.get_next_update_check_time()
 
-        self.raw_data["system"] = {
+        system_data = {
             "next_update_check": (
                 next_update.isoformat() if next_update else "disabled"
             ),
@@ -161,6 +161,9 @@ class PortainerCoordinator(DataUpdateCoordinator):
                 else "never"
             ),
         }
+
+        self.raw_data["system"] = system_data
+        _LOGGER.debug("System data created: %s", system_data)
 
     # ---------------------------
     #   get_endpoints
