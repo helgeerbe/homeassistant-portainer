@@ -242,6 +242,28 @@ class UpdateCheckSensor(PortainerSensor):
         # Always available if coordinator is connected, even if system data is missing
         return self.coordinator.connected()
 
+    def _parse_datetime(self, value: str) -> datetime | str:
+        """Parse ISO string to timezone-aware datetime object."""
+        if isinstance(value, str) and value not in ["disabled", "never"]:
+            try:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                # Ensure timezone-aware datetime
+                if dt.tzinfo is None:
+                    try:
+                        from zoneinfo import ZoneInfo
+
+                        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+                    except ImportError:
+                        # Fallback for older Python versions
+                        from datetime import timezone
+
+                        dt = dt.replace(tzinfo=timezone.utc)
+                return dt
+            except ValueError:
+                # If parsing fails, return as string
+                return value
+        return value
+
     @property
     def native_value(self) -> str | datetime | None:
         """Return the update check status."""
@@ -264,15 +286,7 @@ class UpdateCheckSensor(PortainerSensor):
                 else:
                     value = "never"
 
-            # Convert ISO string to datetime object if it's a valid timestamp
-            if isinstance(value, str) and value not in ["disabled", "never"]:
-                try:
-                    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-                except ValueError:
-                    # If parsing fails, return as string
-                    return value
-
-            return value
+            return self._parse_datetime(value)
         except (KeyError, AttributeError, TypeError):
             return "never"
 
