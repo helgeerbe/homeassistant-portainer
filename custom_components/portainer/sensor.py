@@ -127,6 +127,12 @@ class TimestampSensor(PortainerSensor):
         self._attr_device_class = "timestamp"
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # System sensors are always available, even if data isn't loaded yet
+        return self.coordinator.connected()
+
+    @property
     def native_value(self) -> datetime | str | None:
         """Return the timestamp value."""
         # Handle case where data might not be available yet

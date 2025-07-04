@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_FEATURE_UPDATE_CHECK, DOMAIN
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -18,16 +22,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
+    _LOGGER.debug(
+        "Setting up button platform for config entry %s", config_entry.entry_id
+    )
+
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
     entities = []
 
     # DEBUG: Always create button for testing
+    _LOGGER.debug("Creating ForceUpdateCheckButton")
     entities.append(ForceUpdateCheckButton(coordinator))
     # Original: if coordinator.features.get(CONF_FEATURE_UPDATE_CHECK, False):
 
+    _LOGGER.debug("Adding %d button entities", len(entities))
     if entities:
         async_add_entities(entities)
+    else:
+        _LOGGER.warning("No button entities to add")
 
 
 class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
@@ -35,11 +47,15 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
 
     def __init__(self, coordinator: PortainerCoordinator) -> None:
         """Initialize the button."""
+        _LOGGER.debug("Initializing ForceUpdateCheckButton")
         super().__init__(coordinator)
         self._attr_name = "Force Update Check"
         self._attr_icon = "mdi:update"
         self._attr_entity_category = "config"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_force_update_check"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_system_force_update_check"
+        )
+        _LOGGER.debug("Button initialized with unique_id: %s", self._attr_unique_id)
 
     @property
     def device_info(self):
