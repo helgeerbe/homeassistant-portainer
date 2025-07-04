@@ -152,12 +152,14 @@ class PortainerCoordinator(DataUpdateCoordinator):
 
         self.raw_data["system"] = {
             "system": {
-                "next_update_check": next_update.isoformat() if next_update else None,
+                "next_update_check": (
+                    next_update.isoformat() if next_update else "disabled"
+                ),
                 "update_feature_enabled": self.features[CONF_FEATURE_UPDATE_CHECK],
                 "last_update_check": (
                     self.last_update_check.isoformat()
                     if self.last_update_check
-                    else None
+                    else "never"
                 ),
             }
         }

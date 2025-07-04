@@ -131,11 +131,22 @@ class TimestampSensor(PortainerSensor):
         """Return the timestamp value."""
         value = self._data[self.description.data_attribute]
         if value and isinstance(value, str):
+            if value in ["disabled", "never"]:
+                return None  # Will show as "unavailable"
             try:
                 return datetime.fromisoformat(value.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
                 return None
-        return value
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return extra state attributes."""
+        attrs = super().extra_state_attributes or {}
+        value = self._data[self.description.data_attribute]
+        if value in ["disabled", "never"]:
+            attrs["status"] = value
+        return attrs
 
 
 # ---------------------------
