@@ -29,18 +29,11 @@ async def async_setup_entry(
     async_add_entities_callback: AddEntitiesCallback,
 ):
     """Set up the sensor platform for a specific configuration entry."""
-    import logging
-
-    _LOGGER = logging.getLogger(__name__)
-
-    _LOGGER.error("SENSOR SETUP CALLED - THIS SHOULD BE VERY VISIBLE!!!")
-    _LOGGER.warning("SENSOR SETUP CALLED - will also try to create button")
-
     # Set up entry for portainer component.
     dispatcher = {
         "PortainerSensor": PortainerSensor,
         "TimestampSensor": TimestampSensor,
-        "UpdateCheckSensor": UpdateCheckSensor,  # New simple sensor
+        "UpdateCheckSensor": UpdateCheckSensor,
         "EndpointSensor": EndpointSensor,
         "ContainerSensor": ContainerSensor,
     }

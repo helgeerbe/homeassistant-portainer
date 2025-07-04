@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    
+
     button = ForceUpdateCheckButton(coordinator, config_entry.entry_id)
     async_add_entities([button])
 
@@ -34,7 +34,7 @@ class ForceUpdateCheckButton(ButtonEntity):
         """Initialize the button."""
         self.coordinator = coordinator
         self.entry_id = entry_id
-        
+
         # Set basic attributes
         self._attr_name = "Force Update Check"
         self._attr_icon = "mdi:update"
@@ -44,7 +44,9 @@ class ForceUpdateCheckButton(ButtonEntity):
     def device_info(self):
         """Return device info to group with System device."""
         return {
-            "identifiers": {(DOMAIN, f"{self.coordinator.name}_System_{self.entry_id}")},
+            "identifiers": {
+                (DOMAIN, f"{self.coordinator.name}_System_{self.entry_id}")
+            },
             "name": f"{self.coordinator.name} System",
             "manufacturer": "Portainer",
         }
