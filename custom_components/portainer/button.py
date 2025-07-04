@@ -21,10 +21,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
+    _LOGGER.error("=== BUTTON SETUP START ===")
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-
-    entities = [ForceUpdateCheckButton(coordinator)]
+    _LOGGER.error("Got coordinator: %s", coordinator)
+    
+    button = ForceUpdateCheckButton(coordinator)
+    _LOGGER.error("Button created: %s", button)
+    _LOGGER.error("Button unique_id: %s", button.unique_id)
+    _LOGGER.error("Button available: %s", button.available)
+    _LOGGER.error("Button enabled_default: %s", button.entity_registry_enabled_default)
+    
+    entities = [button]
     async_add_entities(entities)
+    _LOGGER.error("=== BUTTON SETUP COMPLETE ===")
 
 
 class ForceUpdateCheckButton(ButtonEntity):
@@ -32,6 +41,7 @@ class ForceUpdateCheckButton(ButtonEntity):
 
     def __init__(self, coordinator: PortainerCoordinator) -> None:
         """Initialize the button."""
+        _LOGGER.error("=== BUTTON INIT START ===")
         self.coordinator = coordinator
         self._attr_name = "Force Update Check"
         self._attr_icon = "mdi:update"
@@ -39,6 +49,7 @@ class ForceUpdateCheckButton(ButtonEntity):
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_force_update_check_v4"
         )
+        _LOGGER.error("Button init complete - unique_id: %s", self._attr_unique_id)
 
     @property
     def name(self) -> str:
