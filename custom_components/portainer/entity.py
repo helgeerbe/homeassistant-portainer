@@ -39,10 +39,19 @@ async def async_create_sensors(
 
         data = coordinator.data[description.data_path]
         if not description.data_reference:
+            # Special handling for UpdateCheckSensor - only create if feature is enabled
+            if (
+                description.func == "UpdateCheckSensor"
+                and not coordinator.features.get("feature_switch_update_check", False)
+            ):
+                continue
+
             # Always create TimestampSensor entities, even if data is not available yet
             if (
                 data.get(description.data_attribute) is None
                 and description.func != "TimestampSensor"
+                and description.func
+                != "UpdateCheckSensor"  # UpdateCheckSensor handles missing data gracefully
             ):
                 continue
             obj = dispatcher[description.func](coordinator, description)

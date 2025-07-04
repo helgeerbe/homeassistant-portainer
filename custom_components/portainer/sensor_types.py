@@ -89,18 +89,18 @@ SENSOR_TYPES: tuple[PortainerSensorEntityDescription, ...] = (
         func="ContainerSensor",
     ),
     PortainerSensorEntityDescription(
-        key="update_check_status",  # Simplified key
-        name="Update Check Status",
+        key="update_check_status",
+        name="Container Update Check",
         icon="mdi:clock-outline",
         entity_category="diagnostic",
-        ha_group="Endpoints",  # Use existing Endpoints device instead of System
-        data_path="endpoints",  # Use existing endpoints data
-        data_attribute="Name",  # Use existing attribute to ensure data exists
-        data_name="Name",
+        ha_group="System",  # Create special system device for update checks
+        data_path="system",  # Use system data path
+        data_attribute="update_check_enabled",
+        data_name="",
         data_uid="",
-        data_reference="Name",  # Use existing reference to ensure creation
+        data_reference="",  # No reference = single entity
         data_attributes_list=[],
-        func="UpdateCheckSensor",  # New simplified sensor type
+        func="UpdateCheckSensor",
     ),
 )
 

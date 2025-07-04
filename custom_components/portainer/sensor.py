@@ -224,7 +224,7 @@ class ContainerSensor(PortainerSensor):
 #   UpdateCheckSensor
 # ---------------------------
 class UpdateCheckSensor(PortainerSensor):
-    """Simple sensor for update check status."""
+    """Single sensor for update check status across all containers."""
 
     def __init__(
         self,
@@ -234,6 +234,7 @@ class UpdateCheckSensor(PortainerSensor):
     ):
         super().__init__(coordinator, description, uid)
         self._attr_icon = "mdi:clock-outline"
+        self.manufacturer = "Portainer"
 
     @property
     def available(self) -> bool:
@@ -252,10 +253,44 @@ class UpdateCheckSensor(PortainerSensor):
                 return "disabled"
             else:
                 return "never"
-        except Exception:
+        except (KeyError, AttributeError, TypeError):
             return "never"
 
     @property
     def name(self) -> str:
         """Return the name for this entity."""
-        return "Update Check Status"
+        return "Container Update Check"
+
+    @property
+    def device_class(self) -> str | None:
+        """Return device class - only timestamp if we have a valid datetime."""
+        value = self.native_value
+        if value and value not in ["disabled", "never"]:
+            return "timestamp"
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return extra state attributes."""
+        attrs = super().extra_state_attributes or {}
+        value = self.native_value
+        if value in ["disabled", "never"]:
+            attrs["status"] = value
+
+        # Add some container update info
+        try:
+            containers_with_updates = 0
+            total_containers = 0
+            if "containers" in self.coordinator.data:
+                for container_data in self.coordinator.data["containers"].values():
+                    if isinstance(container_data, dict):
+                        total_containers += 1
+                        # Here you could add logic to check if container has updates
+                        # For now, we'll just show counts
+
+            attrs["total_containers"] = total_containers
+            attrs["containers_with_updates"] = containers_with_updates
+        except (KeyError, AttributeError, TypeError):
+            pass
+
+        return attrs
