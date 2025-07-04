@@ -41,10 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.error("=== ABOUT TO FORWARD ENTRY SETUPS ===")
     _LOGGER.error("Platforms to set up: %s", PLATFORMS)
-    
+
     for platform in PLATFORMS:
         _LOGGER.error("Setting up platform: %s", platform)
-        
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     _LOGGER.error("=== FINISHED FORWARDING ENTRY SETUPS ===")
 
