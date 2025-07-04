@@ -40,11 +40,18 @@ async def async_create_sensors(
         data = coordinator.data[description.data_path]
         if not description.data_reference:
             # Special handling for UpdateCheckSensor - only create if feature is enabled
-            if (
-                description.func == "UpdateCheckSensor"
-                and not coordinator.features.get("feature_switch_update_check", False)
-            ):
-                continue
+            if description.func == "UpdateCheckSensor":
+                feature_enabled = coordinator.features.get(
+                    "feature_switch_update_check", False
+                )
+                _LOGGER.debug(
+                    "UpdateCheckSensor creation check: feature_enabled=%s, features=%s",
+                    feature_enabled,
+                    coordinator.features,
+                )
+                if not feature_enabled:
+                    _LOGGER.debug("UpdateCheckSensor not created - feature disabled")
+                    continue
 
             # Always create TimestampSensor entities, even if data is not available yet
             if (
@@ -54,6 +61,10 @@ async def async_create_sensors(
                 != "UpdateCheckSensor"  # UpdateCheckSensor handles missing data gracefully
             ):
                 continue
+
+            _LOGGER.debug(
+                "Creating sensor: %s (func=%s)", description.key, description.func
+            )
             obj = dispatcher[description.func](coordinator, description)
             hass.data[DOMAIN].setdefault(config_entry.entry_id, {}).setdefault(
                 "entities", {}

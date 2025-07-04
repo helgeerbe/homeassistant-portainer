@@ -237,15 +237,55 @@ class UpdateCheckSensor(PortainerSensor):
         self.manufacturer = "Portainer"
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # Always available if coordinator is connected, even if system data is missing
+        return self.coordinator.connected()
+
+    @property
+    def native_value(self) -> str | datetime | None:
+        """Return the update check status."""
+        try:
+            # Check if system data exists and has the required attribute
+            if (
+                "system" in self.coordinator.data
+                and self.description.data_attribute in self.coordinator.data["system"]
+            ):
+                value = self.coordinator.data["system"][self.description.data_attribute]
+            else:
+                # Fallback: use coordinator method if system data is missing
+                next_update = self.coordinator.get_next_update_check_time()
+                if next_update:
+                    value = next_update.isoformat()
+                elif self.coordinator.features.get(
+                    "feature_switch_update_check", False
+                ):
+                    value = "disabled"
+                else:
+                    value = "never"
+
+            # Convert ISO string to datetime object if it's a valid timestamp
+            if isinstance(value, str) and value not in ["disabled", "never"]:
+                try:
+                    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+                except ValueError:
+                    # If parsing fails, return as string
+                    return value
+
+            return value
+        except (KeyError, AttributeError, TypeError):
+            return "never"
+
+    @property
     def name(self) -> str:
         """Return the name for this entity."""
         return "Container Update Check"
 
     @property
     def device_class(self) -> str | None:
-        """Return device class - only timestamp if we have a valid datetime."""
+        """Return device class - timestamp for datetime values."""
         value = self.native_value
-        if value and value not in ["disabled", "never"]:
+        if isinstance(value, datetime):
             return "timestamp"
         return None
 
