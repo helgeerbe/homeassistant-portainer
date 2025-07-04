@@ -108,6 +108,8 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
             "identifiers": {(dev_connection, dev_connection_value)},
             "name": f"{self.coordinator.name} System",
             "manufacturer": "Portainer",
+            "sw_version": getattr(self.coordinator, "sw_version", "Unknown"),
+            "configuration_url": f"http{'s' if self.coordinator.config_entry.data.get('ssl', False) else ''}://{self.coordinator.config_entry.data.get('host', 'localhost')}",
         }
 
     @property
