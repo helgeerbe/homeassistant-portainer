@@ -264,10 +264,41 @@ class UpdateCheckSensor(PortainerSensor):
                 return value
         return value
 
+    def _get_time_until_text(self, target_datetime: datetime) -> str:
+        """Get human-readable text for time until target datetime."""
+        from datetime import timezone
+
+        now = datetime.now(timezone.utc)
+        if target_datetime.tzinfo is None:
+            target_datetime = target_datetime.replace(tzinfo=timezone.utc)
+
+        time_diff = target_datetime - now
+
+        if time_diff.total_seconds() < 0:
+            return "Overdue"
+
+        hours = int(time_diff.total_seconds() // 3600)
+        minutes = int((time_diff.total_seconds() % 3600) // 60)
+
+        if hours > 0:
+            return f"in {hours} hour{'s' if hours != 1 else ''}"
+        elif minutes > 0:
+            return f"in {minutes} minute{'s' if minutes != 1 else ''}"
+        else:
+            return "in less than a minute"
+
     @property
     def native_value(self) -> str | datetime | None:
         """Return the update check status."""
         try:
+            # Always check if update feature is enabled first
+            update_enabled = self.coordinator.features.get(
+                "feature_switch_update_check", False
+            )
+
+            if not update_enabled:
+                return "disabled"
+
             # Check if system data exists and has the required attribute
             if (
                 "system" in self.coordinator.data
@@ -279,14 +310,18 @@ class UpdateCheckSensor(PortainerSensor):
                 next_update = self.coordinator.get_next_update_check_time()
                 if next_update:
                     value = next_update.isoformat()
-                elif self.coordinator.features.get(
-                    "feature_switch_update_check", False
-                ):
-                    value = "disabled"
                 else:
                     value = "never"
 
-            return self._parse_datetime(value)
+            # Parse datetime for timestamp display
+            parsed_value = self._parse_datetime(value)
+
+            # For timestamp values, store the datetime but show friendly text in state_attributes
+            if isinstance(parsed_value, datetime):
+                return parsed_value
+            else:
+                return parsed_value
+
         except (KeyError, AttributeError, TypeError):
             return "never"
 
@@ -310,11 +345,24 @@ class UpdateCheckSensor(PortainerSensor):
 
         # Add system update info from coordinator data
         try:
+            # Current update feature status
+            update_enabled = self.coordinator.features.get(
+                "feature_switch_update_check", False
+            )
+            attrs["update_feature_enabled"] = update_enabled
+
+            # Add user-friendly time display for datetime values
+            value = self.native_value
+            if isinstance(value, datetime):
+                attrs["time_until_check"] = self._get_time_until_text(value)
+                attrs["next_check_time"] = value.strftime("%Y-%m-%d %H:%M:%S %Z")
+            elif value == "disabled":
+                attrs["status_text"] = "Update check is disabled"
+            elif value == "never":
+                attrs["status_text"] = "Update check has never been scheduled"
+
             if "system" in self.coordinator.data:
                 system_data = self.coordinator.data["system"]
-                attrs["update_feature_enabled"] = system_data.get(
-                    "update_feature_enabled", False
-                )
                 attrs["last_update_check"] = system_data.get(
                     "last_update_check", "never"
                 )
