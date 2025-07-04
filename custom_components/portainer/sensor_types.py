@@ -95,7 +95,7 @@ SENSOR_TYPES: tuple[PortainerSensorEntityDescription, ...] = (
         entity_category="diagnostic",
         ha_group="System",  # Create special system device for update checks
         data_path="system",  # Use system data path
-        data_attribute="update_check_enabled",
+        data_attribute="next_update_check",  # Correct attribute name from coordinator
         data_name="",
         data_uid="",
         data_reference="",  # No reference = single entity

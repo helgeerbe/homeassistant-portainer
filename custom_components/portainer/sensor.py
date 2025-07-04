@@ -237,26 +237,6 @@ class UpdateCheckSensor(PortainerSensor):
         self.manufacturer = "Portainer"
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.connected()
-
-    @property
-    def native_value(self) -> str:
-        """Return the update check status."""
-        try:
-            # Try to get next update time from coordinator
-            next_update = self.coordinator.get_next_update_check_time()
-            if next_update:
-                return next_update.isoformat()
-            elif self.coordinator.features.get("feature_switch_update_check", False):
-                return "disabled"
-            else:
-                return "never"
-        except (KeyError, AttributeError, TypeError):
-            return "never"
-
-    @property
     def name(self) -> str:
         """Return the name for this entity."""
         return "Container Update Check"
@@ -273,23 +253,22 @@ class UpdateCheckSensor(PortainerSensor):
     def extra_state_attributes(self) -> dict:
         """Return extra state attributes."""
         attrs = super().extra_state_attributes or {}
-        value = self.native_value
-        if value in ["disabled", "never"]:
-            attrs["status"] = value
 
-        # Add some container update info
+        # Add system update info from coordinator data
         try:
-            containers_with_updates = 0
-            total_containers = 0
-            if "containers" in self.coordinator.data:
-                for container_data in self.coordinator.data["containers"].values():
-                    if isinstance(container_data, dict):
-                        total_containers += 1
-                        # Here you could add logic to check if container has updates
-                        # For now, we'll just show counts
+            if "system" in self.coordinator.data:
+                system_data = self.coordinator.data["system"]
+                attrs["update_feature_enabled"] = system_data.get(
+                    "update_feature_enabled", False
+                )
+                attrs["last_update_check"] = system_data.get(
+                    "last_update_check", "never"
+                )
 
-            attrs["total_containers"] = total_containers
-            attrs["containers_with_updates"] = containers_with_updates
+            # Add container counts
+            if "containers" in self.coordinator.data:
+                attrs["total_containers"] = len(self.coordinator.data["containers"])
+
         except (KeyError, AttributeError, TypeError):
             pass
 
