@@ -58,23 +58,28 @@ async def async_setup_entry(
         _LOGGER.error("Error setting up button platform: %s", e, exc_info=True)
 
 
-class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
+class ForceUpdateCheckButton(ButtonEntity):
     """Button to force immediate update check."""
 
     def __init__(self, coordinator: PortainerCoordinator) -> None:
         """Initialize the button."""
         _LOGGER.error("Initializing ForceUpdateCheckButton")
         try:
-            super().__init__(coordinator)
+            # Don't call super().__init__() for CoordinatorEntity for now
+            self.coordinator = coordinator
             self._attr_name = "Force Update Check"
             self._attr_icon = "mdi:update"
-            self._attr_entity_category = "config"
+            # Remove entity_category for now to see if it helps
+            # self._attr_entity_category = "config"
             self._attr_unique_id = (
-                f"{coordinator.config_entry.entry_id}_force_update_check_v2"
+                f"{coordinator.config_entry.entry_id}_force_update_check_v3"
             )
+            # Explicitly set entity_id to ensure it's recognized
+            self.entity_id = f"button.{coordinator.name.lower().replace(' ', '_')}_force_update_check"
             _LOGGER.error("Button initialized with unique_id: %s", self._attr_unique_id)
             _LOGGER.error("Button name: %s", self._attr_name)
             _LOGGER.error("Button icon: %s", self._attr_icon)
+            _LOGGER.error("Button entity_id: %s", self.entity_id)
         except Exception as e:
             _LOGGER.error("Error initializing button: %s", e, exc_info=True)
             raise
@@ -116,7 +121,11 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         # Always make the button available for now to ensure it appears
-        return True
+        return (
+            self.coordinator.available
+            if hasattr(self.coordinator, "available")
+            else True
+        )
 
     async def async_press(self) -> None:
         """Handle the button press."""
