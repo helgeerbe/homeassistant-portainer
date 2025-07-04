@@ -14,9 +14,9 @@ from homeassistant.util import slugify
 
 from .const import (
     ATTRIBUTION,
-    DOMAIN,
     CUSTOM_ATTRIBUTE_ARRAY,
     DEVICE_ATTRIBUTES_CONTAINERS_UNIQUE,
+    DOMAIN,
 )
 from .coordinator import PortainerCoordinator
 from .helper import format_attribute, format_camel_case
