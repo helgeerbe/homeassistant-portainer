@@ -33,6 +33,10 @@ async def async_create_sensors(
     hass = coordinator.hass
     config_entry = coordinator.config_entry
     for description in descriptions:
+        # Ensure data path exists, create empty dict if needed
+        if description.data_path not in coordinator.data:
+            coordinator.data[description.data_path] = {}
+
         data = coordinator.data[description.data_path]
         if not description.data_reference:
             # Always create TimestampSensor entities, even if data is not available yet

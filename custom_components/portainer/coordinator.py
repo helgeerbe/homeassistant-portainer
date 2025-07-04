@@ -150,6 +150,11 @@ class PortainerCoordinator(DataUpdateCoordinator):
         """Get system-level data."""
         next_update = self.get_next_update_check_time()
 
+        # Get the first available endpoint ID to associate system data with
+        endpoint_id = None
+        if "endpoints" in self.raw_data and self.raw_data["endpoints"]:
+            endpoint_id = next(iter(self.raw_data["endpoints"].keys()))
+
         self.raw_data["system"] = {
             "next_update_check": (
                 next_update.isoformat() if next_update else "disabled"
@@ -160,6 +165,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
                 if self.last_update_check
                 else "never"
             ),
+            "EndpointId": endpoint_id,  # Add EndpointId for device grouping
         }
 
     # ---------------------------

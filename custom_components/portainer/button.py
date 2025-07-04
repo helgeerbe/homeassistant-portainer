@@ -43,21 +43,37 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
 
     @property
     def device_info(self):
-        """Return device info to associate with the System (Primary) device."""
-        # Match exactly what PortainerEntity does for ha_group="System"
-        dev_connection = DOMAIN
-        dev_connection_value = (
-            f"{self.coordinator.name}_System_{self.coordinator.config_entry.entry_id}"
-        )
+        """Return device info to associate with the same device as containers."""
+        # Get the first available endpoint ID to match container device grouping
+        endpoint_id = None
+        if "endpoints" in self.coordinator.data and self.coordinator.data["endpoints"]:
+            endpoint_id = next(iter(self.coordinator.data["endpoints"].keys()))
 
-        return {
-            "connections": {(dev_connection, dev_connection_value)},
-            "identifiers": {(dev_connection, dev_connection_value)},
-            "name": f"{self.coordinator.name} System",
-            "manufacturer": "Docker",
-            "sw_version": "",
-            "configuration_url": f"http{'s' if self.coordinator.config_entry.data.get('ssl', False) else ''}://{self.coordinator.config_entry.data.get('host', '')}",
-        }
+        if endpoint_id:
+            # Match exactly what PortainerEntity does for ha_group="data__EndpointId"
+            dev_connection = DOMAIN
+            dev_connection_value = endpoint_id
+
+            # make connection unique across configurations
+            dev_connection_value += f"_{self.coordinator.config_entry.entry_id}"
+
+            return {
+                "connections": {(dev_connection, dev_connection_value)},
+                "identifiers": {(dev_connection, dev_connection_value)},
+                "default_name": f"{self.coordinator.name} {endpoint_id}",
+                "default_manufacturer": "Docker",
+            }
+        else:
+            # Fallback to endpoints device if no endpoint ID available
+            dev_connection = DOMAIN
+            dev_connection_value = f"{self.coordinator.name}_Endpoints_{self.coordinator.config_entry.entry_id}"
+
+            return {
+                "connections": {(dev_connection, dev_connection_value)},
+                "identifiers": {(dev_connection, dev_connection_value)},
+                "default_name": f"{self.coordinator.name} Endpoints",
+                "default_manufacturer": "Docker",
+            }
 
     @property
     def available(self) -> bool:

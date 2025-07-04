@@ -129,7 +129,11 @@ class TimestampSensor(PortainerSensor):
     @property
     def native_value(self) -> datetime | str | None:
         """Return the timestamp value."""
-        value = self._data[self.description.data_attribute]
+        # Handle case where data might not be available yet
+        if not hasattr(self, "_data") or not self._data:
+            return "unavailable"
+
+        value = self._data.get(self.description.data_attribute)
         if value and isinstance(value, str):
             if value in ["disabled", "never"]:
                 return value  # Return the status as string
@@ -142,7 +146,11 @@ class TimestampSensor(PortainerSensor):
     @property
     def device_class(self) -> str | None:
         """Return device class - only timestamp if we have a valid datetime."""
-        value = self._data[self.description.data_attribute]
+        # Handle case where data might not be available yet
+        if not hasattr(self, "_data") or not self._data:
+            return None
+
+        value = self._data.get(self.description.data_attribute)
         if value and isinstance(value, str) and value not in ["disabled", "never"]:
             return "timestamp"
         return None
@@ -151,7 +159,12 @@ class TimestampSensor(PortainerSensor):
     def extra_state_attributes(self) -> dict:
         """Return extra state attributes."""
         attrs = super().extra_state_attributes or {}
-        value = self._data[self.description.data_attribute]
+
+        # Handle case where data might not be available yet
+        if not hasattr(self, "_data") or not self._data:
+            return attrs
+
+        value = self._data.get(self.description.data_attribute)
         if value in ["disabled", "never"]:
             attrs["status"] = value
         return attrs
