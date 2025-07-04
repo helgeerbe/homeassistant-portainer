@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    
+
     entities = [ForceUpdateCheckButton(coordinator)]
     async_add_entities(entities)
 
@@ -37,7 +37,7 @@ class ForceUpdateCheckButton(ButtonEntity):
         self._attr_icon = "mdi:update"
         self._attr_entity_category = "config"
         self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_force_update_check"
+            f"{coordinator.config_entry.entry_id}_force_update_check_v4"
         )
 
     @property
@@ -76,8 +76,13 @@ class ForceUpdateCheckButton(ButtonEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (self.coordinator.available and
-                self.coordinator.features.get("feature_switch_update_check", False))
+        # Always available for now - we'll control via enabled state
+        return self.coordinator.available
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added."""
+        return self.coordinator.features.get("feature_switch_update_check", False)
 
     async def async_press(self) -> None:
         """Handle the button press."""
