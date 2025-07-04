@@ -22,6 +22,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+
+    # Create force update check button
     button = ForceUpdateCheckButton(coordinator)
     async_add_entities([button])
 
@@ -35,29 +37,12 @@ class ForceUpdateCheckButton(ButtonEntity):
         self._attr_name = "Force Update Check"
         self._attr_icon = "mdi:update"
         self._attr_entity_category = "config"
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_force_update_check_v4"
-        )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the button."""
-        return self._attr_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for the button."""
-        return self._attr_unique_id
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the button."""
-        return self._attr_icon
+        # Use the original unique_id that worked before
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_force_update_check"
 
     @property
     def device_info(self):
         """Return device info to associate with the System device."""
-        # Match exactly what PortainerEntity does for ha_group="System"
         dev_connection = DOMAIN
         dev_connection_value = (
             f"{self.coordinator.name}_System_{self.coordinator.config_entry.entry_id}"
@@ -68,23 +53,21 @@ class ForceUpdateCheckButton(ButtonEntity):
             "identifiers": {(dev_connection, dev_connection_value)},
             "name": f"{self.coordinator.name} System",
             "manufacturer": "Portainer",
-            "sw_version": getattr(self.coordinator, "sw_version", "Unknown"),
-            "configuration_url": f"http{'s' if self.coordinator.config_entry.data.get('ssl', False) else ''}://{self.coordinator.config_entry.data.get('host', 'localhost')}",
         }
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        # Always available for now to avoid errors
         return True
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added."""
-        return self.coordinator.features.get("feature_switch_update_check", False)
+        return self.coordinator.features.get("feature_switch_update_check", True)
 
     async def async_press(self) -> None:
         """Handle the button press."""
+        _LOGGER.info("Force update check button pressed")
         if not self.coordinator.features.get("feature_switch_update_check", False):
             _LOGGER.warning("Update check feature is disabled")
             return

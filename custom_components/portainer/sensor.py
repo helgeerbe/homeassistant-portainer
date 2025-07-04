@@ -52,24 +52,6 @@ async def async_setup_entry(
     services = platform.platform.SENSOR_SERVICES
     descriptions = platform.platform.SENSOR_TYPES
 
-    # Try to create button entities directly from sensor platform
-    try:
-        _LOGGER.warning("Attempting to create button from sensor platform")
-        from .button import ForceUpdateCheckButton
-
-        # Create button entity
-        button_entity = ForceUpdateCheckButton(coordinator)
-        _LOGGER.warning("Button entity created: %s", button_entity.unique_id)
-
-        # Add it to Home Assistant
-        async_add_entities_callback([button_entity])
-        _LOGGER.warning("Button entity added via sensor platform")
-
-    except Exception as e:
-        _LOGGER.error(
-            "Failed to create button from sensor platform: %s", e, exc_info=True
-        )
-
     for service in services:
         if service[0] not in hass.services.async_services().get(DOMAIN, {}):
             platform.async_register_entity_service(service[0], service[1], service[2])
