@@ -1,10 +1,12 @@
 """Constants used by the Portainer integration."""
 
-from homeassistant.const import Platform
 from typing import Final
+
+from homeassistant.const import Platform
 
 PLATFORMS = [
     Platform.SENSOR,
+    Platform.BUTTON,
 ]
 
 DOMAIN = "portainer"

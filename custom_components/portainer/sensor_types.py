@@ -9,7 +9,6 @@ from homeassistant.components.sensor import SensorEntityDescription
 
 from .const import CUSTOM_ATTRIBUTE_ARRAY
 
-
 DEVICE_ATTRIBUTES_ENDPOINTS = [
     "Type",
     "Status",
@@ -88,6 +87,20 @@ SENSOR_TYPES: tuple[PortainerSensorEntityDescription, ...] = (
         data_reference="Id",
         data_attributes_list=DEVICE_ATTRIBUTES_CONTAINERS,
         func="ContainerSensor",
+    ),
+    PortainerSensorEntityDescription(
+        key="next_update_check",
+        name="Next Update Check",
+        icon="mdi:clock-outline",
+        entity_category="diagnostic",
+        ha_group="System",
+        data_path="system",
+        data_attribute="next_update_check",
+        data_name="system",
+        data_uid="",
+        data_reference=None,
+        data_attributes_list=[],
+        func="TimestampSensor",
     ),
 )
 

@@ -130,6 +130,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
             self.raw_data = {}
             await self.hass.async_add_executor_job(self.get_endpoints)
             await self.hass.async_add_executor_job(self.get_containers)
+            await self.hass.async_add_executor_job(self.get_system_data)
         except Exception as error:
             self.lock.release()
             raise UpdateFailed(error) from error
@@ -141,6 +142,25 @@ class PortainerCoordinator(DataUpdateCoordinator):
         async_dispatcher_send(self.hass, f"{self.config_entry.entry_id}_update", self)
 
         return self.raw_data
+
+    # ---------------------------
+    #   get_system_data
+    # ---------------------------
+    def get_system_data(self) -> None:
+        """Get system-level data."""
+        next_update = self.get_next_update_check_time()
+
+        self.raw_data["system"] = {
+            "system": {
+                "next_update_check": next_update.isoformat() if next_update else None,
+                "update_feature_enabled": self.features[CONF_FEATURE_UPDATE_CHECK],
+                "last_update_check": (
+                    self.last_update_check.isoformat()
+                    if self.last_update_check
+                    else None
+                ),
+            }
+        }
 
     # ---------------------------
     #   get_endpoints
@@ -342,6 +362,46 @@ class PortainerCoordinator(DataUpdateCoordinator):
 
         # Check if we've passed the next check time since last check
         return self.last_update_check < next_check and now >= next_check
+
+    # ---------------------------
+    #   get_next_update_check_time
+    # ---------------------------
+    def get_next_update_check_time(self) -> datetime | None:
+        """Get the next scheduled update check time."""
+        if not self.features[CONF_FEATURE_UPDATE_CHECK]:
+            return None
+
+        now = datetime.now()
+        today_check = now.replace(
+            hour=self.update_check_hour, minute=0, second=0, microsecond=0
+        )
+
+        if now < today_check:
+            # Today's check hasn't happened yet
+            return today_check
+        else:
+            # Next check is tomorrow
+            return today_check + timedelta(days=1)
+
+    # ---------------------------
+    #   force_update_check
+    # ---------------------------
+    async def force_update_check(self) -> None:
+        """Force an immediate update check for all containers."""
+        if not self.features[CONF_FEATURE_UPDATE_CHECK]:
+            return
+
+        _LOGGER.info("Force update check triggered")
+
+        # Clear cached results to force fresh check
+        self.cached_update_results.clear()
+        self.cached_registry_responses.clear()
+
+        # Update last check time
+        self.last_update_check = datetime.now()
+
+        # Trigger data refresh
+        await self.async_request_refresh()
 
     def check_image_updates(self, eid: str, container_data: dict) -> bool:
         """Check if an image update is available for a container."""

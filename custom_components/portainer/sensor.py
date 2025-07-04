@@ -8,13 +8,9 @@ from decimal import Decimal
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-)
+from homeassistant.helpers import entity_platform as ep
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers import (
-    entity_platform as ep,
-)
 from homeassistant.helpers.typing import StateType
 
 from custom_components.portainer.const import DOMAIN
@@ -37,6 +33,7 @@ async def async_setup_entry(
     # Set up entry for portainer component.
     dispatcher = {
         "PortainerSensor": PortainerSensor,
+        "TimestampSensor": TimestampSensor,
         "EndpointSensor": EndpointSensor,
         "ContainerSensor": ContainerSensor,
     }
@@ -112,6 +109,33 @@ class PortainerSensor(PortainerEntity, SensorEntity):
                     return self._data[uom]
 
             return self.description.native_unit_of_measurement
+
+
+# ---------------------------
+#   TimestampSensor
+# ---------------------------
+class TimestampSensor(PortainerSensor):
+    """Sensor that handles timestamp values."""
+
+    def __init__(
+        self,
+        coordinator: PortainerCoordinator,
+        description,
+        uid: str | None = None,
+    ):
+        super().__init__(coordinator, description, uid)
+        self._attr_device_class = "timestamp"
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the timestamp value."""
+        value = self._data[self.description.data_attribute]
+        if value and isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        return value
 
 
 # ---------------------------
