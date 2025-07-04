@@ -24,13 +24,23 @@ async def async_setup_entry(
     _LOGGER.error("=== BUTTON SETUP START ===")
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     _LOGGER.error("Got coordinator: %s", coordinator)
-    
+
     button = ForceUpdateCheckButton(coordinator)
     _LOGGER.error("Button created: %s", button)
     _LOGGER.error("Button unique_id: %s", button.unique_id)
-    _LOGGER.error("Button available: %s", button.available)
-    _LOGGER.error("Button enabled_default: %s", button.entity_registry_enabled_default)
-    
+
+    try:
+        available = button.available
+        _LOGGER.error("Button available: %s", available)
+    except Exception as e:
+        _LOGGER.error("Error getting button available: %s", e)
+
+    try:
+        enabled_default = button.entity_registry_enabled_default
+        _LOGGER.error("Button enabled_default: %s", enabled_default)
+    except Exception as e:
+        _LOGGER.error("Error getting button enabled_default: %s", e)
+
     entities = [button]
     async_add_entities(entities)
     _LOGGER.error("=== BUTTON SETUP COMPLETE ===")
@@ -87,8 +97,8 @@ class ForceUpdateCheckButton(ButtonEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        # Always available for now - we'll control via enabled state
-        return self.coordinator.available
+        # Always available for now to avoid errors
+        return True
 
     @property
     def entity_registry_enabled_default(self) -> bool:
