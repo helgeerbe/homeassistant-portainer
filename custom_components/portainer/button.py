@@ -22,9 +22,9 @@ async def async_setup_entry(
 
     entities = []
 
-    # Add force update check button if feature is enabled
-    if coordinator.features.get(CONF_FEATURE_UPDATE_CHECK, False):
-        entities.append(ForceUpdateCheckButton(coordinator))
+    # DEBUG: Add force update check button always for testing
+    entities.append(ForceUpdateCheckButton(coordinator))
+    # TODO: Change to: if coordinator.features.get(CONF_FEATURE_UPDATE_CHECK, False):
 
     if entities:
         async_add_entities(entities)
@@ -43,16 +43,20 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
 
     @property
     def device_info(self):
-        """Return device info to associate with the Primary Endpoints device."""
-        # Match exactly what PortainerEntity does for ha_group="Endpoints"
+        """Return device info to associate with the System (Primary) device."""
+        # Match exactly what PortainerEntity does for ha_group="System"
         dev_connection = DOMAIN
-        dev_connection_value = f"{self.coordinator.name}_Endpoints_{self.coordinator.config_entry.entry_id}"
+        dev_connection_value = (
+            f"{self.coordinator.name}_System_{self.coordinator.config_entry.entry_id}"
+        )
 
         return {
             "connections": {(dev_connection, dev_connection_value)},
             "identifiers": {(dev_connection, dev_connection_value)},
-            "default_name": f"{self.coordinator.name} Endpoints",
-            "default_manufacturer": "Docker",
+            "name": f"{self.coordinator.name} System",
+            "manufacturer": "Docker",
+            "sw_version": "",
+            "configuration_url": f"http{'s' if self.coordinator.config_entry.data.get('ssl', False) else ''}://{self.coordinator.config_entry.data.get('host', '')}",
         }
 
     @property

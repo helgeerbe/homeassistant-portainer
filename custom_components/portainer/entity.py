@@ -35,7 +35,11 @@ async def async_create_sensors(
     for description in descriptions:
         data = coordinator.data[description.data_path]
         if not description.data_reference:
-            if data.get(description.data_attribute) is None:
+            # Always create TimestampSensor entities, even if data is not available yet
+            if (
+                data.get(description.data_attribute) is None
+                and description.func != "TimestampSensor"
+            ):
                 continue
             obj = dispatcher[description.func](coordinator, description)
             hass.data[DOMAIN].setdefault(config_entry.entry_id, {}).setdefault(
