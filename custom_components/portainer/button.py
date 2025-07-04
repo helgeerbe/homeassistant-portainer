@@ -15,6 +15,9 @@ from .coordinator import PortainerCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+# Add a module-level log to see if the file is even imported
+_LOGGER.warning("Portainer button module loaded")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -22,21 +25,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
-    _LOGGER.debug("Setting up button platform for entry %s", config_entry.entry_id)
+    _LOGGER.warning("BUTTON SETUP CALLED for entry %s", config_entry.entry_id)
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    try:
+        coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+        _LOGGER.warning("Got coordinator: %s", coordinator)
 
-    entities = []
+        entities = []
 
-    # Always create force update check button (it will be disabled if feature is off)
-    _LOGGER.debug("Creating ForceUpdateCheckButton")
-    entities.append(ForceUpdateCheckButton(coordinator))
+        # Always create force update check button (it will be disabled if feature is off)
+        _LOGGER.warning("Creating ForceUpdateCheckButton")
+        entities.append(ForceUpdateCheckButton(coordinator))
 
-    _LOGGER.debug("Adding %d button entities", len(entities))
-    if entities:
-        async_add_entities(entities)
-    else:
-        _LOGGER.warning("No button entities to add")
+        _LOGGER.warning("Adding %d button entities", len(entities))
+        if entities:
+            async_add_entities(entities)
+            _LOGGER.warning("Button entities added successfully")
+        else:
+            _LOGGER.warning("No button entities to add")
+    except Exception as e:
+        _LOGGER.error("Error setting up button platform: %s", e, exc_info=True)
 
 
 class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
@@ -44,13 +52,21 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
 
     def __init__(self, coordinator: PortainerCoordinator) -> None:
         """Initialize the button."""
-        _LOGGER.debug("Initializing ForceUpdateCheckButton")
-        super().__init__(coordinator)
-        self._attr_name = "Force Update Check"
-        self._attr_icon = "mdi:update"
-        self._attr_entity_category = "config"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_force_update_check"
-        _LOGGER.debug("Button initialized with unique_id: %s", self._attr_unique_id)
+        _LOGGER.warning("Initializing ForceUpdateCheckButton")
+        try:
+            super().__init__(coordinator)
+            self._attr_name = "Force Update Check"
+            self._attr_icon = "mdi:update"
+            self._attr_entity_category = "config"
+            self._attr_unique_id = (
+                f"{coordinator.config_entry.entry_id}_force_update_check"
+            )
+            _LOGGER.warning(
+                "Button initialized with unique_id: %s", self._attr_unique_id
+            )
+        except Exception as e:
+            _LOGGER.error("Error initializing button: %s", e, exc_info=True)
+            raise
 
     @property
     def device_info(self):

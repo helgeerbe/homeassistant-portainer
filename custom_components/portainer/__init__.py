@@ -2,6 +2,7 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
 from .const import DOMAIN, PLATFORMS
 from .coordinator import PortainerCoordinator
 
@@ -19,6 +20,12 @@ async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry)
 # ---------------------------
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    import logging
+
+    _LOGGER = logging.getLogger(__name__)
+
+    _LOGGER.warning("Portainer setup entry called for %s", config_entry.entry_id)
+    _LOGGER.warning("Platforms to set up: %s", PLATFORMS)
 
     if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
         hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
@@ -30,7 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id]["coordinator"] = coordinator
     await coordinator.async_config_entry_first_refresh()
 
+    _LOGGER.warning("About to forward entry setups for platforms: %s", PLATFORMS)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    _LOGGER.warning("Finished forwarding entry setups")
 
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
