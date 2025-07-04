@@ -151,17 +151,15 @@ class PortainerCoordinator(DataUpdateCoordinator):
         next_update = self.get_next_update_check_time()
 
         self.raw_data["system"] = {
-            "system": {
-                "next_update_check": (
-                    next_update.isoformat() if next_update else "disabled"
-                ),
-                "update_feature_enabled": self.features[CONF_FEATURE_UPDATE_CHECK],
-                "last_update_check": (
-                    self.last_update_check.isoformat()
-                    if self.last_update_check
-                    else "never"
-                ),
-            }
+            "next_update_check": (
+                next_update.isoformat() if next_update else "disabled"
+            ),
+            "update_feature_enabled": self.features[CONF_FEATURE_UPDATE_CHECK],
+            "last_update_check": (
+                self.last_update_check.isoformat()
+                if self.last_update_check
+                else "never"
+            ),
         }
 
     # ---------------------------
