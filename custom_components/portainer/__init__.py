@@ -1,10 +1,14 @@
 """The Portainer integration."""
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import PortainerCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # ---------------------------

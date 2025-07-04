@@ -395,10 +395,9 @@ class PortainerCoordinator(DataUpdateCoordinator):
             # Next check is tomorrow
             return today_check + timedelta(days=1)
 
-    # ---------------------------
-    #   force_update_check
-    # ---------------------------
-    async def force_update_check(self) -> None:
+        # ---------------------------
+        #   force_update_check
+        # ---------------------------    async def force_update_check(self) -> None:
         """Force an immediate update check for all containers."""
         if not self.features[CONF_FEATURE_UPDATE_CHECK]:
             _LOGGER.info(
@@ -406,10 +405,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
             )
             return
 
-        _LOGGER.warning("FORCE UPDATE CHECK STARTED - Button was pressed!")
-        _LOGGER.info(
-            "Force update check initiated - clearing cache and performing fresh container update checks"
-        )
+        _LOGGER.info("Force update check initiated for all containers")
 
         # Clear cached results to force fresh check
         self.cached_update_results.clear()
@@ -421,9 +417,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
         # Trigger data refresh
         await self.async_request_refresh()
 
-        _LOGGER.info(
-            "Force update check completed - all container update statuses have been refreshed"
-        )
+        _LOGGER.info("Force update check completed")
 
     def check_image_updates(self, eid: str, container_data: dict) -> bool:
         """Check if an image update is available for a container."""
@@ -455,11 +449,6 @@ class PortainerCoordinator(DataUpdateCoordinator):
             # Only query registry if it's time to check
             if self.should_check_updates():
                 container_name = container_data.get("Name", "").lstrip("/")
-                _LOGGER.debug(
-                    "Checking for updates for container %s (image: %s)",
-                    container_name,
-                    image_name,
-                )
 
                 # Use cached registry response if available
                 if image_key in self.cached_registry_responses:
@@ -478,10 +467,6 @@ class PortainerCoordinator(DataUpdateCoordinator):
                     self.cached_registry_responses[image_key] = registry_response
 
                 if not registry_response:
-                    _LOGGER.debug(
-                        "Container %s: No registry response available - marking as no update available",
-                        container_name,
-                    )
                     self.cached_update_results[container_id] = False
                     return False
 
@@ -489,27 +474,19 @@ class PortainerCoordinator(DataUpdateCoordinator):
                 registry_image_id = registry_response.get("Id", "")
                 container_image_id = container_data.get("ImageID", "")
 
-                # Log the hash comparison details
-                _LOGGER.debug(
-                    "Container %s: Current hash: %s, Registry hash: %s",
-                    container_name,
-                    (
-                        container_image_id[-12:] if container_image_id else "None"
-                    ),  # Show last 12 chars for readability
-                    registry_image_id[-12:] if registry_image_id else "None",
-                )
-
                 # Compare the IDs - if they differ, an update is available
                 update_available = False
                 if registry_image_id and container_image_id:
                     update_available = registry_image_id != container_image_id
 
-                # Log the comparison result
-                _LOGGER.debug(
-                    "Container %s: Update check result - Update available: %s",
-                    container_name,
-                    "true" if update_available else "false",
-                )
+                # Log only if update is available
+                if update_available:
+                    _LOGGER.info(
+                        "Container %s: Update available - Current: %s, Registry: %s",
+                        container_name,
+                        container_image_id[-12:] if container_image_id else "None",
+                        registry_image_id[-12:] if registry_image_id else "None",
+                    )
 
                 # Cache the result
                 self.cached_update_results[container_id] = update_available
@@ -524,10 +501,8 @@ class PortainerCoordinator(DataUpdateCoordinator):
 
         except Exception as e:
             container_name = container_data.get("Name", "").lstrip("/")
-            _LOGGER.debug(
-                "Container %s: Error checking image updates - %s. Marking as no update available",
-                container_name,
-                str(e),
+            _LOGGER.warning(
+                "Container %s: Update check failed - %s", container_name, str(e)
             )
             self.cached_update_results[container_id] = False
             return False
