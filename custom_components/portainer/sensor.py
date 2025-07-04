@@ -33,6 +33,7 @@ async def async_setup_entry(
 
     _LOGGER = logging.getLogger(__name__)
 
+    _LOGGER.error("SENSOR SETUP CALLED - THIS SHOULD BE VERY VISIBLE!!!")
     _LOGGER.warning("SENSOR SETUP CALLED - will also try to create button")
 
     # Set up entry for portainer component.

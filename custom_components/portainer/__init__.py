@@ -24,8 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER = logging.getLogger(__name__)
 
-    _LOGGER.warning("Portainer setup entry called for %s", config_entry.entry_id)
-    _LOGGER.warning("Platforms to set up: %s", PLATFORMS)
+    _LOGGER.error("=== PORTAINER SETUP ENTRY CALLED ===")
+    _LOGGER.error("Entry ID: %s", config_entry.entry_id)
+    _LOGGER.error("Available platforms: %s", PLATFORMS)
+    _LOGGER.error("Domain: %s", DOMAIN)
 
     if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
         hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
@@ -37,9 +39,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id]["coordinator"] = coordinator
     await coordinator.async_config_entry_first_refresh()
 
-    _LOGGER.warning("About to forward entry setups for platforms: %s", PLATFORMS)
+    _LOGGER.error("=== ABOUT TO FORWARD ENTRY SETUPS ===")
+    _LOGGER.error("Platforms to set up: %s", PLATFORMS)
+    
+    for platform in PLATFORMS:
+        _LOGGER.error("Setting up platform: %s", platform)
+        
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    _LOGGER.warning("Finished forwarding entry setups")
+    _LOGGER.error("=== FINISHED FORWARDING ENTRY SETUPS ===")
 
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
