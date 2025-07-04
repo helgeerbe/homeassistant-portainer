@@ -59,20 +59,16 @@ class ForceUpdateCheckButton(CoordinatorEntity, ButtonEntity):
 
     @property
     def device_info(self):
-        """Return device info to associate with the System device."""
-        # Match exactly what PortainerEntity does for ha_group="System"
+        """Return device info to associate with the Endpoints device."""
+        # Match exactly what PortainerEntity does for ha_group="Endpoints"
         dev_connection = DOMAIN
-        dev_connection_value = (
-            f"{self.coordinator.name}_System_{self.coordinator.config_entry.entry_id}"
-        )
+        dev_connection_value = f"{self.coordinator.name}_Endpoints_{self.coordinator.config_entry.entry_id}"
 
         return {
             "connections": {(dev_connection, dev_connection_value)},
             "identifiers": {(dev_connection, dev_connection_value)},
-            "name": f"{self.coordinator.name} System",
-            "manufacturer": "Docker",
-            "sw_version": "",
-            "configuration_url": f"http{'s' if self.coordinator.config_entry.data.get('ssl', False) else ''}://{self.coordinator.config_entry.data.get('host', '')}",
+            "default_name": f"{self.coordinator.name} Endpoints",
+            "default_manufacturer": "Docker",
         }
 
     @property

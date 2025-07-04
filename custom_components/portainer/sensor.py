@@ -34,6 +34,7 @@ async def async_setup_entry(
     dispatcher = {
         "PortainerSensor": PortainerSensor,
         "TimestampSensor": TimestampSensor,
+        "UpdateCheckSensor": UpdateCheckSensor,  # New simple sensor
         "EndpointSensor": EndpointSensor,
         "ContainerSensor": ContainerSensor,
     }
@@ -217,3 +218,44 @@ class ContainerSensor(PortainerSensor):
                 self.description.ha_group = self.coordinator.data["endpoints"][
                     self._data[dev_group]
                 ]["Name"]
+
+
+# ---------------------------
+#   UpdateCheckSensor
+# ---------------------------
+class UpdateCheckSensor(PortainerSensor):
+    """Simple sensor for update check status."""
+
+    def __init__(
+        self,
+        coordinator: PortainerCoordinator,
+        description,
+        uid: str | None = None,
+    ):
+        super().__init__(coordinator, description, uid)
+        self._attr_icon = "mdi:clock-outline"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.connected()
+
+    @property
+    def native_value(self) -> str:
+        """Return the update check status."""
+        try:
+            # Try to get next update time from coordinator
+            next_update = self.coordinator.get_next_update_check_time()
+            if next_update:
+                return next_update.isoformat()
+            elif self.coordinator.features.get("feature_switch_update_check", False):
+                return "disabled"
+            else:
+                return "never"
+        except Exception:
+            return "never"
+
+    @property
+    def name(self) -> str:
+        """Return the name for this entity."""
+        return "Update Check Status"
