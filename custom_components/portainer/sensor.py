@@ -291,14 +291,6 @@ class UpdateCheckSensor(PortainerSensor):
     def native_value(self) -> str | datetime | None:
         """Return the update check status."""
         try:
-            # Always check if update feature is enabled first
-            update_enabled = self.coordinator.features.get(
-                "feature_switch_update_check", False
-            )
-
-            if not update_enabled:
-                return "disabled"
-
             # Check if system data exists and has the required attribute
             if (
                 "system" in self.coordinator.data
@@ -306,21 +298,22 @@ class UpdateCheckSensor(PortainerSensor):
             ):
                 value = self.coordinator.data["system"][self.description.data_attribute]
             else:
-                # Fallback: use coordinator method if system data is missing
+                # Fallback: determine status manually
+                update_enabled = self.coordinator.features.get(
+                    "feature_switch_update_check", False
+                )
+                if not update_enabled:
+                    return "disabled"
+
                 next_update = self.coordinator.get_next_update_check_time()
                 if next_update:
                     value = next_update.isoformat()
                 else:
-                    value = "never"
+                    return "never"
 
             # Parse datetime for timestamp display
             parsed_value = self._parse_datetime(value)
-
-            # For timestamp values, store the datetime but show friendly text in state_attributes
-            if isinstance(parsed_value, datetime):
-                return parsed_value
-            else:
-                return parsed_value
+            return parsed_value
 
         except (KeyError, AttributeError, TypeError):
             return "never"

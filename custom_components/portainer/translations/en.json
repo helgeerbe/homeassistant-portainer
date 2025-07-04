@@ -38,7 +38,7 @@
             "update_check_status": {
                 "name": "Container Update Check",
                 "state": {
-                    "never": "Never",
+                    "never": "Never scheduled",
                     "disabled": "Disabled"
                 }
             }

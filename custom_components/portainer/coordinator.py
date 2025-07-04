@@ -148,13 +148,22 @@ class PortainerCoordinator(DataUpdateCoordinator):
     # ---------------------------
     def get_system_data(self) -> None:
         """Get system-level data."""
-        next_update = self.get_next_update_check_time()
+        update_enabled = self.features[CONF_FEATURE_UPDATE_CHECK]
+        next_update = self.get_next_update_check_time() if update_enabled else None
+
+        if not update_enabled:
+            # Feature is disabled
+            next_update_value = "disabled"
+        elif next_update:
+            # Feature is enabled and next check is scheduled
+            next_update_value = next_update.isoformat()
+        else:
+            # Feature is enabled but no check scheduled (should not happen normally)
+            next_update_value = "never"
 
         system_data = {
-            "next_update_check": (
-                next_update.isoformat() if next_update else "disabled"
-            ),
-            "update_feature_enabled": self.features[CONF_FEATURE_UPDATE_CHECK],
+            "next_update_check": next_update_value,
+            "update_feature_enabled": update_enabled,
             "last_update_check": (
                 self.last_update_check.isoformat()
                 if self.last_update_check
