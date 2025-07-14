@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime
 from decimal import Decimal
 from logging import getLogger
@@ -87,7 +88,7 @@ async def async_setup_entry(
     )
 
     # Ensure at least one await to justify async
-    await hass.async_add_executor_job(lambda: None)
+    await asyncio.sleep(0)
 
 
 def _get_dispatcher():
