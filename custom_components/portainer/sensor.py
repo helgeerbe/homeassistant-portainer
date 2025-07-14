@@ -50,6 +50,21 @@ async def async_setup_entry(
         len(entities),
     )
 
+    # Detect duplicates before filtering
+    entity_ids = [getattr(entity, "unique_id", None) for entity in entities]
+    seen = set()
+    duplicates = set()
+    for eid in entity_ids:
+        if eid in seen:
+            duplicates.add(eid)
+        else:
+            seen.add(eid)
+    if duplicates:
+        _LOGGER.warning(
+            "Duplicate entities detected during sensor setup: %s. This may indicate an issue in entity creation logic.",
+            ", ".join(str(d) for d in duplicates if d is not None),
+        )
+
     unique_entities = _filter_unique_entities(entities)
     async_add_entities_callback(unique_entities, update_before_add=True)
 
