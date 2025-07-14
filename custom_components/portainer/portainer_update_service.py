@@ -13,6 +13,18 @@ TRANSLATION_UPDATE_CHECK_STATUS_STATE = (
 )
 
 class PortainerUpdateService:
+    def get_scheduled_time(self, now=None):
+        """Return the scheduled update check time as a datetime object for today."""
+        if now is None:
+            from homeassistant.util import dt as dt_util
+            now = dt_util.now()
+        time_str = self.config_entry.options.get("update_check_time", "02:00")
+        try:
+            hour, minute = [int(x) for x in time_str.split(":")]
+        except Exception:
+            hour, minute = 2, 0
+        scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        return scheduled_time
     REGISTRY_LITERAL = "{registry}"
     def __init__(self, hass, config_entry, api, features, config_entry_id):
         self.hass = hass
@@ -114,14 +126,8 @@ class PortainerUpdateService:
     def should_check_updates(self) -> bool:
         if not self.features[CONF_FEATURE_UPDATE_CHECK]:
             return False
-        # This method should be called from coordinator, so force_update_requested logic stays there
         now = dt_util.now()
-        time_str = self.config_entry.options.get("update_check_time", "02:00")
-        try:
-            hour, minute = [int(x) for x in time_str.split(":")]
-        except Exception:
-            hour, minute = 2, 0
-        scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        scheduled_time = self.get_scheduled_time(now)
         if now < scheduled_time:
             return False
         if self.last_update_check is None:
