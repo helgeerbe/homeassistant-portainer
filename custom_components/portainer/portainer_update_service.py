@@ -12,11 +12,13 @@ TRANSLATION_UPDATE_CHECK_STATUS_STATE = (
     "component.portainer.entity.sensor.update_check_status.state"
 )
 
+
 class PortainerUpdateService:
     def get_scheduled_time(self, now=None):
         """Return the scheduled update check time as a datetime object for today."""
         if now is None:
             from homeassistant.util import dt as dt_util
+
             now = dt_util.now()
         time_str = self.config_entry.options.get("update_check_time", "02:00")
         try:
@@ -25,7 +27,9 @@ class PortainerUpdateService:
             hour, minute = 2, 0
         scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         return scheduled_time
+
     REGISTRY_LITERAL = "{registry}"
+
     def __init__(self, hass, config_entry, api, features, config_entry_id):
         self.hass = hass
         self.config_entry = config_entry
@@ -156,6 +160,7 @@ class PortainerUpdateService:
         arch, os = self._get_arch_and_os(eid, image_key)
         try:
             from .docker_registry import BaseRegistry
+
             registry_client = BaseRegistry.for_registry(image_repo, registry)
             manifest = registry_client.get_manifest(image_tag, arch=arch, os=os)
             self._add_digest_to_manifest(manifest)

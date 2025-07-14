@@ -46,6 +46,7 @@ def test_check_image_updates_new_container_status_code():
     from custom_components.portainer.portainer_update_service import (
         PortainerUpdateService,
     )
+
     coordinator.update_service = PortainerUpdateService(
         hass,
         config_entry,

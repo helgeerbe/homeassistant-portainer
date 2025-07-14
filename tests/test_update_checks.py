@@ -78,6 +78,7 @@ def coordinator_with_mock(hass: HomeAssistant, mock_config_entry, mock_api):
     from custom_components.portainer.portainer_update_service import (
         PortainerUpdateService,
     )
+
     coordinator.update_service = PortainerUpdateService(
         hass,
         mock_config_entry,
@@ -102,7 +103,9 @@ class TestUpdateCheckLogic:
             "Image": "certbot-dns-ionos:latest",
         }
         # On first run, should return a dict with integer status
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert isinstance(result, dict), f"Result is not a dict: {result}"
         assert isinstance(result.get("status"), int), f"Status is not int: {result}"
 
@@ -117,7 +120,9 @@ class TestUpdateCheckLogic:
             "Image": "traefik:latest",
         }
         # On first run, should return a dict with integer status
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert isinstance(result, dict), f"Result is not a dict: {result}"
         assert isinstance(result.get("status"), int), f"Status is not int: {result}"
 
@@ -130,7 +135,9 @@ class TestUpdateCheckLogic:
             "Image": "traefik:latest",
         }
         # On first run, should return a dict with integer status
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert isinstance(result, dict), f"Result is not a dict: {result}"
         assert isinstance(result.get("status"), int), f"Status is not int: {result}"
 
@@ -189,11 +196,15 @@ class TestUpdateCheckLogic:
     def test_normalize_image_id(self, coordinator_with_mock):
         """Test _normalize_image_id static method."""
         # Test with sha256: prefix
-        result = coordinator_with_mock.update_service._normalize_image_id("sha256:abc123def456")
+        result = coordinator_with_mock.update_service._normalize_image_id(
+            "sha256:abc123def456"
+        )
         assert result == "abc123def456"
 
         # Test without prefix
-        result = coordinator_with_mock.update_service._normalize_image_id("abc123def456")
+        result = coordinator_with_mock.update_service._normalize_image_id(
+            "abc123def456"
+        )
         assert result == "abc123def456"
 
         # Test empty string
@@ -232,13 +243,17 @@ class TestUpdateCheckLogic:
                 "registry_used": True,
             }
 
-        coordinator_with_mock.update_service._get_registry_response = fake_get_registry_response
+        coordinator_with_mock.update_service._get_registry_response = (
+            fake_get_registry_response
+        )
         container_data = {
             "Id": "test_container",
             "Name": "/test",
             "Image": "nginx:latest",
         }
-        coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
 
         # Cache should be cleared after registry check
         assert "test_key" not in coordinator_with_mock.cached_registry_responses
@@ -247,7 +262,9 @@ class TestUpdateCheckLogic:
     async def test_check_image_updates_no_image_name(self, coordinator_with_mock):
         """Test check_image_updates with no image name."""
         container_data = {"Id": "test_container", "Name": "/test", "Image": ""}
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert result["status"] == 500
 
     @pytest.mark.asyncio
@@ -268,12 +285,17 @@ class TestUpdateCheckLogic:
         coordinator_with_mock.update_service.should_check_updates = lambda: False
         coordinator_with_mock.features["feature_switch_update_check"] = False
         from homeassistant.util import dt as dt_util
+
         coordinator_with_mock.update_service.last_update_check = dt_util.now()
         # Use the same container ID as in container_data
         container_id = container_data["Id"]
-        coordinator_with_mock.update_service.cached_update_results[container_id] = cached_result
+        coordinator_with_mock.update_service.cached_update_results[container_id] = (
+            cached_result
+        )
 
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert result["status"] == 1
 
         # Test with a different cached result
@@ -283,12 +305,17 @@ class TestUpdateCheckLogic:
             "manifest": {},
             "registry_used": True,
         }
-        coordinator_with_mock.update_service.cached_update_results[container_id] = cached_result_false
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        coordinator_with_mock.update_service.cached_update_results[container_id] = (
+            cached_result_false
+        )
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert result["status"] == 0
 
-
-    @patch("custom_components.portainer.portainer_update_service.PortainerUpdateService.should_check_updates")
+    @patch(
+        "custom_components.portainer.portainer_update_service.PortainerUpdateService.should_check_updates"
+    )
     @pytest.mark.asyncio
     async def test_check_image_updates_api_response_dict(
         self, mock_should_check, coordinator_with_mock
@@ -316,9 +343,13 @@ class TestUpdateCheckLogic:
                 "registry_used": True,
             }
 
-        coordinator_with_mock.update_service._get_registry_response = fake_get_registry_response
+        coordinator_with_mock.update_service._get_registry_response = (
+            fake_get_registry_response
+        )
         container_data["ImageID"] = "sha256:abc"
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert result == {
             "status": 0,
             "status_description": None,
@@ -331,8 +362,9 @@ class TestUpdateCheckLogic:
             "registry_used": True,
         }
 
-
-    @patch("custom_components.portainer.portainer_update_service.PortainerUpdateService.should_check_updates")
+    @patch(
+        "custom_components.portainer.portainer_update_service.PortainerUpdateService.should_check_updates"
+    )
     @pytest.mark.asyncio
     async def test_check_image_updates_api_response_list(
         self, mock_should_check, coordinator_with_mock
@@ -359,9 +391,13 @@ class TestUpdateCheckLogic:
                 "registry_used": True,
             }
 
-        coordinator_with_mock.update_service._get_registry_response = fake_get_registry_response
+        coordinator_with_mock.update_service._get_registry_response = (
+            fake_get_registry_response
+        )
         container_data["ImageID"] = "sha256:abc"
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert result == {
             "status": 0,
             "status_description": None,
@@ -374,8 +410,9 @@ class TestUpdateCheckLogic:
             "registry_used": True,
         }
 
-
-    @patch("custom_components.portainer.portainer_update_service.PortainerUpdateService.should_check_updates")
+    @patch(
+        "custom_components.portainer.portainer_update_service.PortainerUpdateService.should_check_updates"
+    )
     @pytest.mark.asyncio
     async def test_check_image_updates_api_error(
         self, mock_should_check, coordinator_with_mock
@@ -396,8 +433,12 @@ class TestUpdateCheckLogic:
                 "registry_used": True,
             }
 
-        coordinator_with_mock.update_service._get_registry_response = fake_get_registry_response
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        coordinator_with_mock.update_service._get_registry_response = (
+            fake_get_registry_response
+        )
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert isinstance(result, dict)
         assert result["status"] == 500
         assert "status_description" in result
@@ -427,8 +468,12 @@ class TestUpdateCheckLogic:
                 "registry_used": True,
             }
 
-        coordinator_with_mock.update_service._get_registry_response = fake_get_registry_response
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        coordinator_with_mock.update_service._get_registry_response = (
+            fake_get_registry_response
+        )
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert isinstance(result["status"], int)
 
     def test_get_scheduled_time_feature_disabled(self, coordinator_with_mock):
@@ -436,7 +481,9 @@ class TestUpdateCheckLogic:
         coordinator_with_mock.features["feature_switch_update_check"] = False
         now = dt_util.now()
         scheduled_time = coordinator_with_mock.update_service.get_scheduled_time(now)
-        time_str = coordinator_with_mock.config_entry.options.get("update_check_time", "02:00")
+        time_str = coordinator_with_mock.config_entry.options.get(
+            "update_check_time", "02:00"
+        )
         hour, minute = [int(x) for x in time_str.split(":")]
         assert scheduled_time.hour == hour
         assert scheduled_time.minute == minute
@@ -498,6 +545,10 @@ class TestUpdateCheckIntegration:
                 "registry_used": True,
             }
 
-        coordinator_with_mock.update_service._get_registry_response = fake_get_registry_response
-        result = coordinator_with_mock.update_service.check_image_updates("test_eid", container_data)
+        coordinator_with_mock.update_service._get_registry_response = (
+            fake_get_registry_response
+        )
+        result = coordinator_with_mock.update_service.check_image_updates(
+            "test_eid", container_data
+        )
         assert isinstance(result["status"], int)

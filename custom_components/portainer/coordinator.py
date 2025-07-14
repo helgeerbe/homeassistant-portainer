@@ -76,6 +76,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
         # Remove local update-check state, now handled by update_service
         # Use update service for registry/update logic
         from .portainer_update_service import PortainerUpdateService
+
         self.update_service = PortainerUpdateService(
             hass,
             config_entry,
@@ -353,7 +354,9 @@ class PortainerCoordinator(DataUpdateCoordinator):
                     CUSTOM_ATTRIBUTE_ARRAY + "_Raw"
                 ]["Restart_Policy"]
             if self.features[CONF_FEATURE_UPDATE_CHECK]:
-                update_available = self.update_service.check_image_updates(eid, container)
+                update_available = self.update_service.check_image_updates(
+                    eid, container
+                )
                 if update_available["registry_used"]:
                     registry_checked = True
                 container[CUSTOM_ATTRIBUTE_ARRAY]["Update_Available"] = (

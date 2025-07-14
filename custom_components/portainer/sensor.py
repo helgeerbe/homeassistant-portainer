@@ -413,7 +413,7 @@ class UpdateCheckSensor(PortainerSensor):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled by default (feature-dependent)."""
-         # Use the attribute if set, otherwise calculate from feature state
+        # Use the attribute if set, otherwise calculate from feature state
         if hasattr(self, "_attr_entity_registry_enabled_default"):
             return self._attr_entity_registry_enabled_default
         feature_enabled = self.coordinator.config_entry.options.get(

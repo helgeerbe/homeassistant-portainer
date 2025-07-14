@@ -25,7 +25,6 @@ from .helper import format_attribute, format_camel_case
 _LOGGER = getLogger(__name__)
 
 
-
 def create_sensors(coordinator, descriptions, dispatcher):
     """Create Portainer sensor entities using EntityFactory."""
     factory = EntityFactory(coordinator, dispatcher)

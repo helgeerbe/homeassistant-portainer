@@ -241,6 +241,7 @@ class TestImageIdNormalization:
         from custom_components.portainer.portainer_update_service import (
             PortainerUpdateService,
         )
+
         image_id = "sha256:abc123def456789"
         result = PortainerUpdateService._normalize_image_id(image_id)
         assert result == "abc123def456789"
@@ -250,6 +251,7 @@ class TestImageIdNormalization:
         from custom_components.portainer.portainer_update_service import (
             PortainerUpdateService,
         )
+
         image_id = "abc123def456789"
         result = PortainerUpdateService._normalize_image_id(image_id)
         assert result == "abc123def456789"
@@ -259,6 +261,7 @@ class TestImageIdNormalization:
         from custom_components.portainer.portainer_update_service import (
             PortainerUpdateService,
         )
+
         result = PortainerUpdateService._normalize_image_id("")
         assert result == ""
 
@@ -267,6 +270,7 @@ class TestImageIdNormalization:
         from custom_components.portainer.portainer_update_service import (
             PortainerUpdateService,
         )
+
         image_id = "sha256:abc123"
         result = PortainerUpdateService._normalize_image_id(image_id)
         assert result == "abc123"
@@ -276,5 +280,6 @@ class TestImageIdNormalization:
         from custom_components.portainer.portainer_update_service import (
             PortainerUpdateService,
         )
+
         result = PortainerUpdateService._normalize_image_id("sha256:")
         assert result == ""
