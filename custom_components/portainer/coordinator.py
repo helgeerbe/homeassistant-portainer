@@ -139,7 +139,11 @@ class PortainerCoordinator(DataUpdateCoordinator):
     async def async_shutdown(self) -> None:
         """Shutdown coordinator."""
         if self.lock.locked():
-            self.lock.release()
+            try:
+                self.lock.release()
+            except RuntimeError:
+                # Lock was not acquired by this task, ignore
+                pass
 
     # ---------------------------
     #   connected
@@ -155,7 +159,7 @@ class PortainerCoordinator(DataUpdateCoordinator):
         """Update Portainer data. Triggers update check at scheduled time without recursion."""
         try:
             await asyncio.wait_for(self.lock.acquire(), timeout=10)
-        except TimeoutError:
+        except asyncio.TimeoutError:
             return {}
 
         try:
