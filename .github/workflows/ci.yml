@@ -3,20 +3,19 @@ name: CI
 on:
   push:
     paths:
-      - 'custom_components/**'
-      - 'tests/**'
+      - "custom_components/**"
+      - "tests/**"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'custom_components/**'
-      - 'tests/**'
+      - "custom_components/**"
+      - "tests/**"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-
   black:
     name: Python Code Format Check
     runs-on: ubuntu-latest
@@ -24,9 +23,9 @@ jobs:
       - name: Check out code from GitHub
         uses: "actions/checkout@v4"
       - name: Black Code Format Check
-        uses: lgeiger/black-action@master
+        uses: psf/black@stable
         with:
-          args: ". --check --fast --diff"
+          options: ". --check --fast --diff"
 
   tests:
     name: Python Tests
@@ -37,7 +36,7 @@ jobs:
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
       - name: Generate Requirements lists
         run: |
           python3 .github/generate_requirements.py
