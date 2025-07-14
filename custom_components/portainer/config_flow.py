@@ -174,19 +174,7 @@ class PortainerOptionsFlow(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
-            # Full validation for submission
-            if (
-                user_input.get(CONF_FEATURE_UPDATE_CHECK)
-                and CONF_UPDATE_CHECK_TIME in user_input
-            ):
-                time_str = user_input[CONF_UPDATE_CHECK_TIME]
-                try:
-                    import time
-
-                    time.strptime(time_str, "%H:%M")
-                except ValueError:
-                    errors[CONF_UPDATE_CHECK_TIME] = "invalid_time_format"
-
+            # No manual time validation needed; schema enforces format
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
@@ -223,7 +211,7 @@ class PortainerOptionsFlow(config_entries.OptionsFlow):
                 CONF_UPDATE_CHECK_TIME,
                 default=data.get(CONF_UPDATE_CHECK_TIME, DEFAULT_UPDATE_CHECK_TIME),
                 description="Daily update check time in HH:MM format (only used when update check is enabled)",
-            ): str,
+            ): vol.All(str, validate_time_string),
         }
 
         return self.async_show_form(

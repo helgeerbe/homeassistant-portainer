@@ -350,7 +350,8 @@ class PortainerUpdateService:
             )
         return update_available
 
-    def _normalize_image_id(self, image_id: str) -> str:
+    @staticmethod
+    def _normalize_image_id(image_id: str) -> str:
         if image_id.startswith("sha256:"):
             return image_id[7:]
         return image_id
