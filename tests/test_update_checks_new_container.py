@@ -39,6 +39,18 @@ def test_check_image_updates_new_container_status_code():
     coordinator.config_entry = config_entry
     coordinator.api = object()  # Add mock API to avoid AttributeError
     coordinator.features = {"feature_switch_update_check": False}
+    # Setup update_service for refactored logic before using last_update_check
+    from custom_components.portainer.portainer_update_service import (
+        PortainerUpdateService,
+    )
+
+    coordinator.update_service = PortainerUpdateService(
+        hass,
+        config_entry,
+        coordinator.api,
+        coordinator.features,
+        config_entry.entry_id,
+    )
     coordinator.last_update_check = None
     coordinator.cached_registry_responses = {}
     coordinator.cached_update_results = {}

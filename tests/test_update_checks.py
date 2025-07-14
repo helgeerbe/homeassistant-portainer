@@ -54,6 +54,18 @@ def coordinator_with_mock(hass: HomeAssistant, mock_config_entry, mock_api):
         "feature_switch_update_check": True,
     }
 
+    # Add update_service (PortainerUpdateService) to coordinator before using last_update_check
+    from custom_components.portainer.portainer_update_service import (
+        PortainerUpdateService,
+    )
+
+    coordinator.update_service = PortainerUpdateService(
+        hass,
+        mock_config_entry,
+        mock_api,
+        coordinator.features,
+        mock_config_entry.entry_id,
+    )
     coordinator.last_update_check = None
     coordinator.cached_update_results = {}
     coordinator.cached_registry_responses = {}
@@ -91,7 +103,6 @@ def coordinator_with_mock(hass: HomeAssistant, mock_config_entry, mock_api):
 
 
 class TestUpdateCheckLogic:
-
     @pytest.mark.asyncio
     async def test_check_image_updates_local_image_not_on_registry(
         self, coordinator_with_mock
@@ -153,7 +164,7 @@ class TestUpdateCheckLogic:
     def test_should_check_updates_force_update(self, coordinator_with_mock):
         """Test should_check_updates with feature enabled and force_update_requested True."""
         coordinator_with_mock.features["feature_switch_update_check"] = True
-        coordinator_with_mock.force_update_requested = True
+        coordinator_with_mock.update_service.force_update_requested = True
         result = coordinator_with_mock.update_service.should_check_updates()
         assert result is True
 
@@ -188,7 +199,7 @@ class TestUpdateCheckLogic:
         coordinator_with_mock.features["feature_switch_update_check"] = True
 
         # Simple approach: Set force_update_requested to True
-        coordinator_with_mock.force_update_requested = True
+        coordinator_with_mock.update_service.force_update_requested = True
 
         result = coordinator_with_mock.update_service.should_check_updates()
         assert result is True
@@ -229,13 +240,17 @@ class TestUpdateCheckLogic:
 
     def test_invalidate_cache_on_registry_check(self, coordinator_with_mock):
         """Test cache is cleared when reading from the registry (stale entries removed)."""
-        coordinator_with_mock.last_update_check = dt_util.now() - timedelta(hours=25)
-        coordinator_with_mock.cached_registry_responses["test_key"] = "cached_data"
+        coordinator_with_mock.update_service.last_update_check = (
+            dt_util.now() - timedelta(hours=25)
+        )
+        coordinator_with_mock.update_service.cached_registry_responses["test_key"] = (
+            "cached_data"
+        )
 
         # Simulate registry check that should clear stale cache
         def fake_get_registry_response(eid, registry, image_repo, image_tag, image_key):
             # Simulate cache clearing inside registry check
-            coordinator_with_mock.cached_registry_responses.clear()
+            coordinator_with_mock.update_service.cached_registry_responses.clear()
             return {
                 "status": 200,
                 "status_description": None,

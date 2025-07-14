@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,6 +32,7 @@ from .const import (
     DOMAIN,
     SCAN_INTERVAL,
 )
+from .portainer_update_service import PortainerUpdateService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,9 +74,13 @@ class PortainerCoordinator(DataUpdateCoordinator):
             ),
         }
 
-        # Remove local update-check state, now handled by update_service
-        # Use update service for registry/update logic
-        from .portainer_update_service import PortainerUpdateService
+        self.api = PortainerAPI(
+            self.hass,
+            self.host,
+            self.data[CONF_API_KEY],
+            self.data[CONF_SSL],
+            self.data[CONF_VERIFY_SSL],
+        )
 
         self.update_service = PortainerUpdateService(
             hass,
@@ -92,14 +97,6 @@ class PortainerCoordinator(DataUpdateCoordinator):
         }
 
         self.lock = asyncio.Lock()
-
-        self.api = PortainerAPI(
-            self.hass,
-            self.host,
-            self.data[CONF_API_KEY],
-            self.data[CONF_SSL],
-            self.data[CONF_VERIFY_SSL],
-        )
         self.config_entry = config_entry
         self._systemstats_errored: list = []
         self.datasets_hass_device_id = None
@@ -184,8 +181,31 @@ class PortainerCoordinator(DataUpdateCoordinator):
     # ---------------------------
     def get_system_data(self) -> None:
         """Get system-level data."""
-        self.raw_data["system"] = self.update_service.get_system_data()
-        _LOGGER.debug("System data created: %s", self.raw_data["system"])
+        update_enabled = self.features[CONF_FEATURE_UPDATE_CHECK]
+        next_update = self.get_next_update_check_time() if update_enabled else None
+
+        if not update_enabled:
+            # Feature is disabled
+            next_update_value = "disabled"
+        elif next_update:
+            # Feature is enabled and next check is scheduled
+            next_update_value = next_update.isoformat()
+        else:
+            # Feature is enabled but no check scheduled (should not happen normally)
+            next_update_value = "never"
+
+        system_data = {
+            "next_update_check": next_update_value,
+            "update_feature_enabled": update_enabled,
+            "last_update_check": (
+                self.last_update_check.isoformat()
+                if self.last_update_check
+                else "never"
+            ),
+        }
+
+        self.raw_data["system"] = system_data
+        _LOGGER.debug("System data created: %s", system_data)
 
     # ---------------------------
     #   get_endpoints
@@ -254,6 +274,14 @@ class PortainerCoordinator(DataUpdateCoordinator):
 
         if registry_checked:
             self.last_update_check = dt_util.now()
+
+    def _flatten_containers_dict(self, containers: dict) -> dict:
+        """Flatten the containers dictionary so each environment has its own set of containers."""
+        return {
+            f"{eid}{cid}": value
+            for eid, t_dict in containers.items()
+            for cid, value in t_dict.items()
+        }
 
     def _parse_containers_for_endpoint(self, eid: str) -> dict:
         """Parse containers for a given endpoint."""
@@ -406,19 +434,28 @@ class PortainerCoordinator(DataUpdateCoordinator):
         return self.update_service.should_check_updates()
 
     # ---------------------------
-    #   get_next_update_check_time
+    #   force_update_check
     # ---------------------------
-    def get_next_update_check_time(self) -> datetime | None:
-        """Get the next scheduled update check time."""
-        return self.update_service.get_next_update_check_time()
-
-        # ---------------------------
-        #   force_update_check
-        # ---------------------------
-
     async def force_update_check(self) -> None:
         """Force an immediate update check for all containers."""
-        await self.update_service.force_update_check()
+        _LOGGER.info("Force update check initiated for all containers")
+        self.update_service.force_update_requested = True
+        self.update_service.force_update_check()
         await self.async_request_refresh()
+        self.update_service.force_update_requested = False
+        self.last_update_check = dt_util.now()
+        _LOGGER.info("Force update check completed")
 
-    # Removed all update-check logic and cache/state handling; now fully delegated to update_service
+    @property
+    def last_update_check(self):
+        """Return the last update check time from update_service."""
+        return self.update_service.last_update_check
+
+    @last_update_check.setter
+    def last_update_check(self, value):
+        """Set the last update check time in update_service."""
+        self.update_service.last_update_check = value
+
+    def get_next_update_check_time(self):
+        """Return the next scheduled update check time from update_service."""
+        return self.update_service.get_next_update_check_time()
